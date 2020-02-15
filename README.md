@@ -1,5 +1,5 @@
 # URIEncode
-Linux下的URIEncode程序，使用C语言编写
+Linux下的URIEncode程序，使用C语言编写<br/>
 编写它的初衷是我希望能将figlet的输出复制成一行，方便粘贴到别的代码中
 
 `figlet 'Java Script' | encode`:
