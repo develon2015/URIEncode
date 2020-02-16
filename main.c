@@ -29,25 +29,52 @@ isURIChar(const char ch) {
 }
 
 char *
-URIEncode(const char *uri) {
+URIEncode(const char *uri, const char *type) {
 	int n = strlen(uri);
-	char *cp = (char *)malloc(n * 3);
-	memset(cp, 0, n * 3);
+	char *cp = (char *)malloc(n * 6);
+	memset(cp, 0, n * 6);
 	int pn = 0;
 	// scan uri
-	for (int i = 0; i < n; i ++ ) {
-		if (isURIChar(uri[i])) {
-			cp[pn++] = uri[i];
-			continue;
+	if (strcmp("uri", type) == 0) {
+		for (int i = 0; i < n; i ++ ) {
+			if (isURIChar(uri[i])) {
+				cp[pn++] = uri[i];
+				continue;
+			}
+			// UTF8
+			char it[4] = { 0 };
+			if ((unsigned char)uri[i] < 0x10)
+				sprintf(it, "%%0%X", (unsigned char)uri[i]);
+			else
+				sprintf(it, "%%%X", (unsigned char)uri[i]);
+			strcat(cp, it);
+			pn += 3;
 		}
-		// UTF8
-		char it[4] = { 0 };
-		if ((unsigned char)uri[i] < 0x10)
-			sprintf(it, "%%0%X", (unsigned char)uri[i]);
-		else
-			sprintf(it, "%%%X", (unsigned char)uri[i]);
-		strcat(cp, it);
-		pn += 3;
+	} else if (strcmp("c", type) == 0) {
+		for (int i = 0; i < n; i ++ ) {
+			char it[5] = { 0 };
+			if ((unsigned char)uri[i] < 0x10)
+				sprintf(it, "\\x0%X", (unsigned char)uri[i]);
+			else
+				sprintf(it, "\\x%X", (unsigned char)uri[i]);
+			strcat(cp, it);
+			pn += 4;
+		}
+	} else if (strcmp("java", type) == 0 || strcmp("unicode", type) || strcmp("js", type) || strcmp("utf", type)) {
+		for (int i = 0; i < n; i ++ ) {
+			if (uri[i] < 0) {
+				cp[pn++] = uri[i];
+				continue;
+			}
+			//continue;
+			char it[7] = { 0 };
+			if ((unsigned char)uri[i] < 0x10)
+				sprintf(it, "\\u000%X", (unsigned char)uri[i]);
+			else
+				sprintf(it, "\\u00%X", (unsigned char)uri[i]);
+			strcat(cp, it);
+			pn += 6;
+		}
 	}
 	return cp;
 }
@@ -70,6 +97,9 @@ main(int argc, char *argv[]) {
 		}
 	}
 	buf[cur] = '\0';
-	printf("%s\n", URIEncode(buf));
+	if (argc == 2)
+		printf("%s\n", URIEncode(buf, argv[1]));
+	else
+		printf("%s\n", URIEncode(buf, "uri"));
 	return 0;
 }
